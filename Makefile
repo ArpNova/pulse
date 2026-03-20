@@ -5,7 +5,7 @@ CXXFLAGS = -Wall -Wextra -O2
 # Directories and project files
 BUILD_DIR = build
 TARGET = $(BUILD_DIR)/pulse
-SRC = monitor.cpp
+SRC = src/monitor.cpp
 
 # Default rule (what happens when you just type 'make')
 all: $(TARGET)

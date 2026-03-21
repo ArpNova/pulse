@@ -105,4 +105,4 @@ make clean
 
 This project is licensed under the [MIT License](LICENSE). 
 
-Copyright (c) 2026 Arpan Biswas.
+Copyright © 2026 Arpan Biswas.

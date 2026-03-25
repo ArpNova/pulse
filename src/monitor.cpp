@@ -7,6 +7,34 @@
 #include <string>
 #include <thread>
 #include <optional>
+#include <filesystem>
+
+std::optional<std::string> autoDiscoverInterface(){
+  std::string netPath = "/sys/class/net";
+
+  try{
+    for(const auto& entry : std::filesystem::directory_iterator(netPath)){
+      std::string ifaceName = entry.path().filename().string();
+
+      if(ifaceName == "lo"){
+        continue;
+      }
+
+      std::string statePath = entry.path().string() + "/operstate";
+      std::ifstream stateFile(statePath);
+      std::string state;
+
+      if(stateFile.is_open() && std::getline(stateFile, state)){
+        if(state == "up"){
+          return ifaceName;
+        }
+      }
+    }
+  }catch(const std::filesystem::filesystem_error& e){
+    std::cerr << "Error scaning network interface: " << e.what() << "\n";
+  }
+  return std::nullopt;
+}
 
 std::string formatBytes(unsigned long long bytes, bool isSpeed = true) {
   double value = static_cast<double>(bytes);
@@ -42,12 +70,22 @@ std::optional<unsigned long long> getBytes(const std::string &interfaceName, con
 }
 
 int main(int argc, char *argv[]) {
-  std::string interface = "wlan0";
+  std::string interface;
 
   if (argc > 1) {
     interface = argv[1];
   } else {
-    std::cout << "Tip: You can specify an interface (e.g., ./pulse eth0)\n";
+    std::cout << "No interface specified. Scanning for active connections...\n";
+    auto discovered = autoDiscoverInterface();
+
+    if(discovered){
+      interface = *discovered;
+      std::cout << "Auto-discovered active interface: " << interface << "\n";
+    }else{
+      std::cerr << "Error: Could not automatically find an active interface (is your Wi-Fi connected?).\n";
+      std::cerr << "Tip: You can specify one manually (e.g., ./pulse wlan0)\n";
+      return 1;
+    }
   }
 
   auto previousRxOpt = getBytes(interface, "rx_bytes");

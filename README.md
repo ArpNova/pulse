@@ -40,6 +40,8 @@
 
 ## ✨ Features
 
+- **Auto-Discovery**: Automatically finds and monitors the first active network interface if none is specified.
+- **Session Totals**: Tracks and displays the total data transferred (Rx and Tx) during the monitoring session.
 - **Real-Time Monitoring**: Instantaneous tracking of Rx and Tx data rates.
 - **Dynamic Formatting**: Automatically scales bandwidth units (B/s, KB/s, MB/s, GB/s) for readability.
 - **Lightweight**: Minimal CPU and memory footprint, making it ideal for background monitoring or low-resource environments.
@@ -68,14 +70,14 @@
 
 ## 💻 Usage
 
-Run the compiled executable. By default, Pulse listens to the `wlan0` interface. To monitor a different interface, simply pass its name as an argument.
+Run the compiled executable. If no arguments are provided, Pulse will automatically scan and connect to the active network interface. To monitor a specific interface, pass its name as an argument.
 
 ```bash
-# Run with the default interface (wlan0)
+# Auto-detect and monitor the active interface
 ./build/pulse
 
-# Specify a custom interface (e.g., eth0, enp3s0, lo)
-./build/pulse eth0
+# Specify a custom interface (e.g., wlan0, eth0, enp3s0, lo)
+./build/pulse wlan0
 ```
 
 Alternatively, you can build and run it in a single command using:
@@ -87,10 +89,12 @@ make run
 ### 📊 Example Output
 
 ```text
+No interface specified. Scanning for active connections...
+Auto-discovered active interface: wlan0
 Starting pulse... Monitoring wlan0.
 Press Ctrl+C to stop.
 
-Rx: 1.25 MB/s  |  Tx: 450.32 KB/s          
+Rx: 1.25 MB/s (12.50 MB) |  Tx: 450.32 KB/s (4.50 MB)          
 ```
 
 ## 🧹 Clean Up

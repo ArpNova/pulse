@@ -47,6 +47,8 @@
 - **Lightweight**: Minimal CPU and memory footprint, making it ideal for background monitoring or low-resource environments.
 - **Dependency-Free**: Uses standard Linux SysFS (`/sys/class/net/`) to read packet statistics directly from the kernel.
 - **Fault-Tolerant**: Handles counter wrap-arounds and network stat-read errors gracefully.
+- **Data Persistence**: Automatically saves hourly history of downloaded and uploaded data to `~/.pulse_data.csv`.
+- **Graceful Shutdown**: Intercepts `Ctrl+C` to cleanly exit the monitoring loop and save all final session statistics to disk.
 
 ## 📁 Project Structure
 
@@ -54,10 +56,12 @@ The codebase is modularized into distinct C++ components for maintainability:
 
 - `include/pulse/` - Contains header files (`.hpp`) for declarations.
   - `network.hpp` - Network interface discovery and sysfs statistics reading.
+  - `storage.hpp` - Persistent storage management for network stats.
   - `utils.hpp` - Data formatting and utility functions.
 - `src/` - Contains the implementation logic (`.cpp`).
   - `main.cpp` - The application entry point and monitoring loop.
   - `network.cpp` - Implementation of the network operations.
+  - `storage.cpp` - CSV data load, save, and update logic.
   - `utils.cpp` - Implementation of data formatting logic.
 
 ## 🛠️ Prerequisites

@@ -48,6 +48,18 @@
 - **Dependency-Free**: Uses standard Linux SysFS (`/sys/class/net/`) to read packet statistics directly from the kernel.
 - **Fault-Tolerant**: Handles counter wrap-arounds and network stat-read errors gracefully.
 
+## 📁 Project Structure
+
+The codebase is modularized into distinct C++ components for maintainability:
+
+- `include/pulse/` - Contains header files (`.hpp`) for declarations.
+  - `network.hpp` - Network interface discovery and sysfs statistics reading.
+  - `utils.hpp` - Data formatting and utility functions.
+- `src/` - Contains the implementation logic (`.cpp`).
+  - `main.cpp` - The application entry point and monitoring loop.
+  - `network.cpp` - Implementation of the network operations.
+  - `utils.cpp` - Implementation of data formatting logic.
+
 ## 🛠️ Prerequisites
 
 - A Linux-based operating system.

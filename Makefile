@@ -1,19 +1,26 @@
 # Compiler settings
 CXX = g++
-CXXFLAGS = -Wall -Wextra -O2 -std=c++17
+CXXFLAGS = -Wall -Wextra -O2 -std=c++17 -Iinclude
 
 # Directories and project files
 BUILD_DIR = build
+SRC_DIR = src
 TARGET = $(BUILD_DIR)/pulse
-SRC = src/monitor.cpp
+SRCS = $(wildcard $(SRC_DIR)/*.cpp)
+OBJS = $(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(SRCS))
 
-# Default rule (what happens when you just type 'make')
+# Default rule
 all: $(TARGET)
 
 # Rule to build the actual program
-$(TARGET): $(SRC)
+$(TARGET): $(OBJS)
 	mkdir -p $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) $(SRC) -o $(TARGET)
+	$(CXX) $(CXXFLAGS) $^ -o $@
+
+# Rule to build object files
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
+	mkdir -p $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # Rule to run the program easily
 run: $(TARGET)

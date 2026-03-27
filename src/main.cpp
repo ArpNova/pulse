@@ -1,73 +1,8 @@
+#include "pulse/network.hpp"
+#include "pulse/utils.hpp"
 #include <chrono>
-#include <fstream>
-#include <iomanip>
-#include <ios>
 #include <iostream>
-#include <sstream>
-#include <string>
 #include <thread>
-#include <optional>
-#include <filesystem>
-
-std::optional<std::string> autoDiscoverInterface(){
-  std::string netPath = "/sys/class/net";
-
-  try{
-    for(const auto& entry : std::filesystem::directory_iterator(netPath)){
-      std::string ifaceName = entry.path().filename().string();
-
-      if(ifaceName == "lo"){
-        continue;
-      }
-
-      std::string statePath = entry.path().string() + "/operstate";
-      std::ifstream stateFile(statePath);
-      std::string state;
-
-      if(stateFile.is_open() && std::getline(stateFile, state)){
-        if(state == "up"){
-          return ifaceName;
-        }
-      }
-    }
-  }catch(const std::filesystem::filesystem_error& e){
-    std::cerr << "Error scaning network interface: " << e.what() << "\n";
-  }
-  return std::nullopt;
-}
-
-std::string formatBytes(unsigned long long bytes, bool isSpeed = true) {
-  double value = static_cast<double>(bytes);
-
-  const std::string speedUnits[] = {"B/s", "KB/s", "MB/s", "GB/s"};
-  const std::string volumeUnits[] = {"B", "KB", "MB", "GB"};
-  int unitIndex = 0;
-
-  while (value >= 1024.0 && unitIndex < 3) {
-    value /= 1024.0;
-    unitIndex++;
-  }
-  std::stringstream formattedOutput;
-  formattedOutput << std::fixed << std::setprecision(2) << value << " "
-                 << (isSpeed ? speedUnits[unitIndex] : volumeUnits[unitIndex]);
-  return formattedOutput.str();
-}
-
-std::optional<unsigned long long> getBytes(const std::string &interfaceName, const std::string &type) {
-  std::string path = "/sys/class/net/" + interfaceName + "/statistics/" + type;
-  std::ifstream file(path);
-  std::string line;
-
-  if (file.is_open() && std::getline(file, line)) {
-    try {
-      return std::stoull(line);
-    } catch (const std::exception&) {
-      // handles std::invalid_argument and std::out_of_range
-      return std::nullopt;
-    }
-  }
-  return std::nullopt;
-}
 
 int main(int argc, char *argv[]) {
   std::string interface;

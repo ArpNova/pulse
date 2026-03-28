@@ -3,6 +3,7 @@
 #include <chrono>
 #include <cstdlib>
 #include <ctime>
+#include <exception>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -26,13 +27,20 @@ void StorageManager::load() {
     return;
 
   while (std::getline(file, line)) {
+    if (line.empty())
+      continue;
+
     std::stringstream ss(line);
     std::string timeKey, rxStr, txStr;
 
     if (std::getline(ss, timeKey, ',') && std::getline(ss, rxStr, ',') &&
-        std::getline(ss, txStr, ',')) {
-      usageData[timeKey].rx = std::stoull(rxStr);
-      usageData[timeKey].tx = std::stoull(txStr);
+        std::getline(ss, txStr)) {
+      try {
+        usageData[timeKey].rx = std::stoull(rxStr);
+        usageData[timeKey].tx = std::stoull(txStr);
+      } catch (const std::exception &) {
+        std::cerr << "Warning: Skipping corrupted data line in database.\n";
+      }
     }
   }
 }

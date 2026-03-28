@@ -48,6 +48,7 @@
 - **Dependency-Free**: Uses standard Linux SysFS (`/sys/class/net/`) to read packet statistics directly from the kernel.
 - **Fault-Tolerant**: Handles counter wrap-arounds and network stat-read errors gracefully.
 - **Data Persistence**: Automatically saves hourly history of downloaded and uploaded data to `~/.pulse_data.csv`.
+- **Historical Stats**: View daily, monthly, and all-time data usage with the `--stats` flag.
 - **Graceful Shutdown**: Intercepts `Ctrl+C` to cleanly exit the monitoring loop and save all final session statistics to disk.
 
 ## 📁 Project Structure
@@ -86,14 +87,31 @@ The codebase is modularized into distinct C++ components for maintainability:
 
 ## 💻 Usage
 
-Run the compiled executable. If no arguments are provided, Pulse will automatically scan and connect to the active network interface. To monitor a specific interface, pass its name as an argument.
+Run the compiled executable. If no arguments are provided, Pulse will automatically scan and connect to the active network interface.
+
+### ⚙️ Options
+
+```bash
+./build/pulse [OPTIONS]
+
+  -i, --interface <name>   Specify network interface
+  -s, --stats              Show data usage history
+  -h, --help               Show this menu
+```
+
+### 📋 Examples
 
 ```bash
 # Auto-detect and monitor the active interface
 ./build/pulse
 
 # Specify a custom interface (e.g., wlan0, eth0, enp3s0, lo)
+./build/pulse -i wlan0
+# or simply
 ./build/pulse wlan0
+
+# Show long-term data usage statistics
+./build/pulse --stats
 ```
 
 Alternatively, you can build and run it in a single command using:
@@ -104,13 +122,28 @@ make run
 
 ### 📊 Example Output
 
+**Monitoring Mode:**
 ```text
-No interface specified. Scanning for active connections...
-Auto-discovered active interface: wlan0
+Scanning for active connections... 
+Auto-discovered: wlan0
 Starting pulse... Monitoring wlan0.
 Press Ctrl+C to stop.
 
 Rx: 1.25 MB/s (12.50 MB) |  Tx: 450.32 KB/s (4.50 MB)          
+```
+
+**Statistics Mode (`pulse -s`):**
+```text
+ pulse Network Statistics 
+
+Today (2026-03-28):
+ DL: 12.50 MB | UL: 4.50 MB
+
+This month (2026-03):
+  DL: 45.20 GB  |  UL: 12.10 GB
+
+All-Time:
+  DL: 150.75 GB  |  UL: 42.80 GB
 ```
 
 ## 🧹 Clean Up

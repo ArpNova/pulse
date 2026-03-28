@@ -2,6 +2,7 @@
 #include <chrono>
 #include <ctime>
 #include <iomanip>
+#include <iostream>
 #include <sstream>
 #include <string>
 
@@ -29,4 +30,30 @@ std::string getCurrentHourKey() {
   std::stringstream ss;
   ss << std::put_time(std::localtime(&time_now), "%Y-%m-%d-%H");
   return ss.str();
+}
+
+PulseConfig parseArguments(int argc, char **argv) {
+  PulseConfig config;
+
+  for (int i = 1; i < argc; i++) {
+    std::string arg = argv[i];
+
+    if (arg == "-s" || arg == "--stats") {
+      config.showStats = true;
+    } else if (arg == "-h" || arg == "--help") {
+      config.showHelp = true;
+    } else if (arg == "-i" || arg == "--interface") {
+      if (i + 1 < argc) {
+        config.interface = argv[++i];
+      } else {
+        std::cerr << "Error: -i requires a network interface name.\n";
+        exit(1);
+      }
+    } else if (arg[0] != '-') {
+      config.interface = arg;
+    } else {
+      std::cerr << "Warning: Unknown flag ignored -> " << arg << "\n";
+    }
+  }
+  return config;
 }

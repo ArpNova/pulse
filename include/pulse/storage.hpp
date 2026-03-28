@@ -19,4 +19,6 @@ public:
   void save();
   void addUsage(const std::string &timeKey, unsigned long long rx_bytes,
                 unsigned long long tx_bytes);
+  void printStats();
+  bool isEmpty()const {return usageData.empty();}
 };

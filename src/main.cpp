@@ -9,29 +9,46 @@
 
 std::atomic<bool> keepRunning(true);
 
-void handleExit([[maybe_unused]]int signum) { keepRunning = false; }
+void handleExit([[maybe_unused]] int signum) { keepRunning = false; }
 
 int main(int argc, char *argv[]) {
+  PulseConfig config = parseArguments(argc, argv);
+
+  if (config.showHelp) {
+    std::cout << "Pulse - Network Monitor\n";
+    std::cout << "Usage: ./pulse [OPTIONS]\n";
+    std::cout << "  -i, --interface <name>   Specify network interface\n";
+    std::cout << "  -s, --stats              Show data usage history\n";
+    std::cout << "  -h, --help               Show this menu\n";
+    return 0;
+  }
+
   signal(SIGINT, handleExit);
 
   StorageManager storage;
   storage.load();
 
+  if (config.showStats) {
+    if (storage.isEmpty()) {
+      std::cout << "No data recorded yet. Run Pulse without flags to start "
+                   "monitoring!\n";
+    } else {
+      storage.printStats();
+    }
+    return 0;
+  }
+
   std::string interface;
-
-  if (argc > 1) {
-    interface = argv[1];
+  if (config.interface) {
+    interface = *config.interface;
   } else {
-    std::cout << "No interface specified. Scanning for active connections...\n";
+    std::cout << "Scanning for active connections... \n";
     auto discovered = autoDiscoverInterface();
-
     if (discovered) {
       interface = *discovered;
-      std::cout << "Auto-discovered active interface: " << interface << "\n";
+      std::cout << "Auto-discovered: " << interface << "\n";
     } else {
-      std::cerr << "Error: Could not automatically find an active interface "
-                   "(is your Wi-Fi connected?).\n";
-      std::cerr << "Tip: You can specify one manually (e.g., ./pulse wlan0)\n";
+      std::cerr << "Error: Could not find interface. Use -i to specify one.\n";
       return 1;
     }
   }

@@ -77,9 +77,9 @@ Once installed, you can run `pulse` from anywhere in your terminal — no build 
 
 ---
 
-## 💻 Usage
-
 Run the compiled executable. If no specific arguments are provided, pulse will automatically locate and bind to your active network interface.
+
+> **Note:** If you installed via the one-line installer (Option 1), use `pulse` directly. If you built from source (Option 2), use `./build/pulse`.
 
 ### Options
 
@@ -92,17 +92,26 @@ Run the compiled executable. If no specific arguments are provided, pulse will a
 ### Command Examples
 
 ```bash
+# ── If installed via one-line installer (Option 1) ──
+
 # Auto-detect and monitor the active interface
+pulse
+
+# Specify a custom interface
+pulse -i wlan0
+
+# Show long-term data usage
+pulse --stats
+
+# Show help
+pulse --help
+
+
+# ── If built from source (Option 2) ──
+
 ./build/pulse
-
-# Specify a custom interface (e.g., wlan0, eth0, enp3s0, lo)
 ./build/pulse -i wlan0
-./build/pulse wlan0
-
-# Generate long-term data usage reports
 ./build/pulse --stats
-
-# Show the general help menu
 ./build/pulse --help
 ```
 

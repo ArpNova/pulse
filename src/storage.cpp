@@ -1,6 +1,7 @@
 #include "pulse/storage.hpp"
 #include "pulse/utils.hpp"
 #include <chrono>
+#include <cstdio>
 #include <cstdlib>
 #include <ctime>
 #include <exception>
@@ -46,16 +47,21 @@ void StorageManager::load() {
 }
 
 void StorageManager::save() {
-  std::ofstream file(dbPath);
-  if (!file.is_open()) {
-    std::cerr << "\nError: Could not save data to " << dbPath << "\n";
+  std::string tmpPath = dbPath + ".tmp";
+  std::ofstream file(tmpPath);
+
+  if(!file.is_open()){
+    std::cerr<<"\nError: Could not save data to " << tmpPath << "\n";
     return;
   }
 
-  for (const auto &pair : usageData) {
-    file << pair.first << "," << pair.second.rx << "," << pair.second.tx
-         << "\n";
+  for(const auto &pair: usageData){
+    file << pair.first << "," << pair.second.rx << "," << pair.second.tx << "\n";
   }
+
+  file.close();
+
+  std::rename(tmpPath.c_str(), dbPath.c_str());
 }
 
 void StorageManager::addUsage(const std::string &timeKey,

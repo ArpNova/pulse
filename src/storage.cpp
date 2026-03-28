@@ -50,13 +50,14 @@ void StorageManager::save() {
   std::string tmpPath = dbPath + ".tmp";
   std::ofstream file(tmpPath);
 
-  if(!file.is_open()){
-    std::cerr<<"\nError: Could not save data to " << tmpPath << "\n";
+  if (!file.is_open()) {
+    std::cerr << "\nError: Could not save data to " << tmpPath << "\n";
     return;
   }
 
-  for(const auto &pair: usageData){
-    file << pair.first << "," << pair.second.rx << "," << pair.second.tx << "\n";
+  for (const auto &pair : usageData) {
+    file << pair.first << "," << pair.second.rx << "," << pair.second.tx
+         << "\n";
   }
 
   file.close();
@@ -93,11 +94,11 @@ void StorageManager::printStats() {
     allTime.rx += stats.rx;
     allTime.tx += stats.tx;
 
-    if (timeKey.substr(0, 10) == todayPrefix) {
+    if (timeKey.size() >= 10 && timeKey.substr(0, 10) == todayPrefix) {
       today.rx += stats.rx;
       today.tx += stats.tx;
     }
-    if (timeKey.substr(0, 7) == monthPrefix) {
+    if (timeKey.size() >= 7 && timeKey.substr(0, 7) == monthPrefix) {
       month.rx += stats.rx;
       month.tx += stats.tx;
     }

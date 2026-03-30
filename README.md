@@ -35,6 +35,8 @@ Built exclusively for Linux, it completely bypasses external dependencies by map
 ## ✨ Features
 
 * **Zero External Dependencies**: Operates natively reading direct kernel stats. No `libpcap` or third-party wrappers required.
+* **Universal Static Binary**: Fully statically linked executable guarantees compatibility across all Linux distributions (old and new) right out of the box.
+* **Bits vs. Bytes Toggle**: Utilize the `-b` flag to seamlessly switch between viewing network speeds and historical data in standard network bits (b/s) instead of Bytes (B/s).
 * **Auto-Discovery**: Automatically scans and monitors the first active network hardware interface if no target is provided.
 * **Smart Data Persistence**: Hourly downloaded and uploaded data is safely committed to a background atomic database (`~/.pulse_data.csv`).
 * **Crash-Resilient Design**: Fault-tolerant implementations elegantly handle interface resets, integer wrap-arounds, and malformed files.
@@ -51,7 +53,7 @@ Built exclusively for Linux, it completely bypasses external dependencies by map
 Install the pre-compiled binary directly to your system with a single command:
 
 ```bash
-sudo wget -O /usr/local/bin/pulse https://github.com/arpnova/pulse/releases/download/v0.1.0/pulse && sudo chmod +x /usr/local/bin/pulse
+sudo wget -O /usr/local/bin/pulse https://github.com/arpnova/pulse/releases/download/v0.1.1/pulse && sudo chmod +x /usr/local/bin/pulse
 ```
 
 Once installed, you can run `pulse` from anywhere in your terminal — no build step required.
@@ -87,6 +89,7 @@ Run the compiled executable. If no specific arguments are provided, pulse will a
 | :--- | :--- | :--- |
 | `-i` | `--interface <name>` | Manually specify a network interface to monitor |
 | `-s` | `--stats` | Display aggregated data usage history |
+| `-b` | `--bits` | Display network speeds and statistics in bits (b/s) instead of Bytes (B/s) |
 | `-h` | `--help` | Display the application help menu |
 
 ### Command Examples
@@ -103,6 +106,12 @@ pulse -i wlan0
 # Show long-term data usage
 pulse --stats
 
+# Show speeds in bits (b/s) instead of Bytes
+pulse -b
+
+# Show long-term data usage in bits
+pulse --stats -b
+
 # Show help
 pulse --help
 
@@ -112,6 +121,8 @@ pulse --help
 ./build/pulse
 ./build/pulse -i wlan0
 ./build/pulse --stats
+./build/pulse -b
+./build/pulse --stats -b
 ./build/pulse --help
 ```
 
@@ -122,6 +133,7 @@ pulse --help
 ### Live Monitoring Example
 Tracking incoming data speeds in real-time.
 
+**Default (Bytes):**
 ```text
 Scanning for active connections... 
 Auto-discovered: wlan0
@@ -131,9 +143,20 @@ Press Ctrl+C to stop.
 Rx: 1.25 MB/s (12.50 MB) |  Tx: 450.32 KB/s (4.50 MB)          
 ```
 
+**Bits mode (`pulse -b`):**
+```text
+Scanning for active connections... 
+Auto-discovered: wlan0
+Starting pulse... Monitoring wlan0.
+Press Ctrl+C to stop.
+
+Rx: 10.49 Mb/s (104.86 Mb) |  Tx: 3.69 Mb/s (37.75 Mb)          
+```
+
 ### Statistics Example (`pulse -s`)
 Printing total historical bandwidth usage.
 
+**Default (Bytes):**
 ```text
  pulse Network Statistics 
 
@@ -145,6 +168,20 @@ This month (2026-03):
 
 All-Time:
   DL: 150.75 GB  |  UL: 42.80 GB
+```
+
+**Bits mode (`pulse --stats -b`):**
+```text
+ pulse Network Statistics 
+
+Today (2026-03-28):
+ DL: 104.86 Mb | UL: 37.75 Mb
+
+This month (2026-03):
+  DL: 388.26 Gb  |  UL: 103.94 Gb
+
+All-Time:
+  DL: 1294.94 Gb  |  UL: 367.65 Gb
 ```
 
 ---

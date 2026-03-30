@@ -19,6 +19,7 @@ int main(int argc, char *argv[]) {
     std::cout << "Usage: ./pulse [OPTIONS]\n";
     std::cout << "  -i, --interface <name>   Specify network interface\n";
     std::cout << "  -s, --stats              Show data usage history\n";
+    std::cout << "  -b, --bits               Display output in bits (b/s)\n";
     std::cout << "  -h, --help               Show this menu\n";
     return 0;
   }
@@ -33,7 +34,7 @@ int main(int argc, char *argv[]) {
       std::cout << "No data recorded yet. Run Pulse without flags to start "
                    "monitoring!\n";
     } else {
-      storage.printStats();
+      storage.printStats(config.useBits);
     }
     return 0;
   }
@@ -109,11 +110,11 @@ int main(int argc, char *argv[]) {
     unsigned long long speedTxBytes =
         static_cast<unsigned long long>(txDiff / elapsed.count());
 
-    std::string speedRX = formatBytes(speedRxBytes, true);
-    std::string speedTX = formatBytes(speedTxBytes, true);
+    std::string speedRX = formatBytes(speedRxBytes, true, config.useBits);
+    std::string speedTX = formatBytes(speedTxBytes, true, config.useBits);
 
-    std::string totRx = formatBytes(totalRxSession, false);
-    std::string totTx = formatBytes(totalTxSession, false);
+    std::string totRx = formatBytes(totalRxSession, false, config.useBits);
+    std::string totTx = formatBytes(totalTxSession, false, config.useBits);
 
     std::string currentHour = getCurrentHourKey();
     storage.addUsage(currentHour, rxDiff, txDiff);

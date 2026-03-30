@@ -37,8 +37,8 @@ void StorageManager::load() {
     if (std::getline(ss, timeKey, ',') && std::getline(ss, rxStr, ',') &&
         std::getline(ss, txStr)) {
       try {
-        usageData[timeKey].rx = std::stoull(rxStr);
-        usageData[timeKey].tx = std::stoull(txStr);
+        usageData[timeKey].rx += std::stoull(rxStr);
+        usageData[timeKey].tx += std::stoull(txStr);
       } catch (const std::exception &) {
         std::cerr << "Warning: Skipping corrupted data line in database.\n";
       }
@@ -72,7 +72,7 @@ void StorageManager::addUsage(const std::string &timeKey,
   usageData[timeKey].tx += tx_bytes;
 }
 
-void StorageManager::printStats() {
+void StorageManager::printStats(bool useBits) {
   auto now = std::chrono::system_clock::now();
   std::time_t time_now = std::chrono::system_clock::to_time_t(now);
 
@@ -106,14 +106,14 @@ void StorageManager::printStats() {
 
   std::cout << "\n pulse Network Statistics \n\n";
   std::cout << "Today (" << todayPrefix << "):\n";
-  std::cout << " DL: " << formatBytes(today.rx, false)
-            << " | UL: " << formatBytes(today.tx, false) << "\n\n";
+  std::cout << " DL: " << formatBytes(today.rx, false, useBits)
+            << " | UL: " << formatBytes(today.tx, false, useBits) << "\n\n";
 
   std::cout << "This month (" << monthPrefix << "):\n";
-  std::cout << "  DL: " << formatBytes(month.rx, false)
-            << "  |  UL: " << formatBytes(month.tx, false) << "\n\n";
+  std::cout << "  DL: " << formatBytes(month.rx, false, useBits)
+            << "  |  UL: " << formatBytes(month.tx, false, useBits) << "\n\n";
 
   std::cout << "All-Time:\n";
-  std::cout << "  DL: " << formatBytes(allTime.rx, false)
-            << "  |  UL: " << formatBytes(allTime.tx, false) << "\n\n";
+  std::cout << "  DL: " << formatBytes(allTime.rx, false, useBits)
+            << "  |  UL: " << formatBytes(allTime.tx, false, useBits) << "\n\n";
 }

@@ -6,20 +6,36 @@
 #include <sstream>
 #include <string>
 
-std::string formatBytes(unsigned long long bytes, bool isSpeed) {
+std::string formatBytes(unsigned long long bytes, bool isSpeed, bool useBits) {
   double value = static_cast<double>(bytes);
 
-  const std::string speedUnits[] = {"B/s", "KB/s", "MB/s", "GB/s"};
-  const std::string volumeUnits[] = {"B", "KB", "MB", "GB"};
+  if (useBits) {
+    value *= 8;
+  }
+
+  const std::string speedBytes[] = {"B/s", "KB/s", "MB/s", "GB/s"};
+  const std::string volumeBytes[] = {"B", "KB", "MB", "GB"};
+
+  const std::string speedBits[] = {"b/s", "Kb/s", "Mb/s", "Gb/s"};
+  const std::string volumeBits[] = {"b", "Kb", "Mb", "Gb"};
   int unitIndex = 0;
 
-  while (value >= 1024.0 && unitIndex < 3) {
-    value /= 1024.0;
+  double divisor = useBits ? 1000.0 : 1024.0;
+
+  while (value >= divisor && unitIndex < 3) {
+    value /= divisor;
     unitIndex++;
   }
   std::stringstream formattedOutput;
-  formattedOutput << std::fixed << std::setprecision(2) << value << " "
-                  << (isSpeed ? speedUnits[unitIndex] : volumeUnits[unitIndex]);
+  formattedOutput << std::fixed << std::setprecision(2) << value << " ";
+
+  if (useBits) {
+    formattedOutput << (isSpeed ? speedBits[unitIndex] : volumeBits[unitIndex]);
+  } else {
+    formattedOutput << (isSpeed ? speedBytes[unitIndex]
+                                : volumeBytes[unitIndex]);
+  }
+
   return formattedOutput.str();
 }
 
@@ -40,6 +56,8 @@ PulseConfig parseArguments(int argc, char **argv) {
 
     if (arg == "-s" || arg == "--stats") {
       config.showStats = true;
+    } else if (arg == "-b" || arg == "--bits") {
+      config.useBits = true;
     } else if (arg == "-h" || arg == "--help") {
       config.showHelp = true;
     } else if (arg == "-i" || arg == "--interface") {

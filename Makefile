@@ -1,6 +1,6 @@
 # Compiler settings
 CXX = g++
-CXXFLAGS = -Wall -Wextra -O2 -std=c++17 -Iinclude
+CXXFLAGS = -Wall -Wextra -O2 -std=c++17 -Iinclude -static
 
 # Directories and project files
 BUILD_DIR = build

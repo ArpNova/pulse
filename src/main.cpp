@@ -147,12 +147,20 @@ int main(int argc, char *argv[]) {
     unsigned long long currentTxBytes = *currentTxOpt;
 
     // handle potential counter wrap-around or reset
-    unsigned long long rxDiff = (currentRxBytes >= previousRxBytes)
-                                    ? (currentRxBytes - previousRxBytes)
-                                    : currentRxBytes;
-    unsigned long long txDiff = (currentTxBytes >= previousTxBytes)
-                                    ? (currentTxBytes - previousTxBytes)
-                                    : currentTxBytes;
+    auto calcDiff = [](unsigned long long current, unsigned long long previous) -> unsigned long long {
+      if (current >= previous) {
+        return current - previous;
+      }
+      if (previous > 0x80000000ULL && previous <= 0xFFFFFFFFULL) {
+        return (0xFFFFFFFFULL - previous) + current + 1; // 32-bit wrap
+      } else if (previous > 0x8000000000000000ULL) {
+        return (0xFFFFFFFFFFFFFFFFULL - previous) + current + 1; // 64-bit wrap
+      }
+      return current; // interface down/up reset
+    };
+
+    unsigned long long rxDiff = calcDiff(currentRxBytes, previousRxBytes);
+    unsigned long long txDiff = calcDiff(currentTxBytes, previousTxBytes);
 
     totalRxSession += rxDiff;
     totalTxSession += txDiff;

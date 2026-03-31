@@ -16,9 +16,6 @@ std::atomic<bool> createdLockFile(false);
 
 void handleExit([[maybe_unused]] int signum) {
   keepRunning = false;
-  if (createdLockFile) {
-    std::remove("/tmp/pulse.lock");
-  }
 }
 
 int main(int argc, char *argv[]) {
@@ -200,6 +197,10 @@ int main(int argc, char *argv[]) {
 
   if (!config.isReadOnly) {
     storage.save();
+  }
+
+  if (createdLockFile) {
+    std::remove("/tmp/pulse.lock");
   }
 
   return 0;

@@ -10,7 +10,18 @@ std::optional<std::string> autoDiscoverInterface(){
     for(const auto& entry : std::filesystem::directory_iterator(netPath)){
       std::string ifaceName = entry.path().filename().string();
 
-      if(ifaceName == "lo"){
+      bool isVirtual = false;
+      const std::string blacklistedPrefixes[] = {
+          "lo", "veth", "docker", "br-", "virbr", "vmnet", "tun", "tap"};
+
+      for (const auto &prefix : blacklistedPrefixes) {
+        if (ifaceName.find(prefix) == 0) {
+          isVirtual = true;
+          break;
+        }
+      }
+
+      if (isVirtual) {
         continue;
       }
 

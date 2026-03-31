@@ -4,15 +4,25 @@
 #include <atomic>
 #include <chrono>
 #include <csignal>
+#include <cstdio>
+#include <fstream>
 #include <iostream>
+#include <string>
 #include <thread>
 #include <unistd.h>
 
 std::atomic<bool> keepRunning(true);
+std::atomic<bool> createdLockFile(false);
 
-void handleExit([[maybe_unused]] int signum) { keepRunning = false; }
+void handleExit([[maybe_unused]] int signum) {
+  keepRunning = false;
+  if (createdLockFile) {
+    std::remove("/tmp/pulse.lock");
+  }
+}
 
 int main(int argc, char *argv[]) {
+  const std::string lockFilePath = "/tmp/pulse.lock";
   PulseConfig config = parseArguments(argc, argv);
 
   if (config.showHelp) {
@@ -69,6 +79,26 @@ int main(int argc, char *argv[]) {
   unsigned long long previousRxBytes = *previousRxOpt;
   unsigned long long previousTxBytes = *previousTxOpt;
 
+  std::ifstream checkLock(lockFilePath);
+  bool lockExists = checkLock.good();
+  checkLock.close();
+
+  if (lockExists) {
+    if (config.runDaemon) {
+      std::cerr << "Error: pulse is already running in the background.\n";
+      return 1;
+    } else {
+      std::cout << "[Note] pulse instance detected in background\n";
+      std::cout << "Starting in read-only viewer mode\n\n";
+      config.isReadOnly = true;
+    }
+  } else {
+    std::ofstream lockFile(lockFilePath);
+    lockFile << "Pulse monitoring\n";
+    lockFile.close();
+    createdLockFile = true;
+  }
+
   if (config.runDaemon) {
     std::cout << "Starting pulse in background daemon mode...\n";
     std::cout << "Monitoring interface: " << interface << "\n";
@@ -76,11 +106,19 @@ int main(int argc, char *argv[]) {
 
     if (daemon(0, 0) < 0) {
       std::cerr << "Error: Failed to start daemon mode.\n";
+      if (createdLockFile) {
+        std::remove(lockFilePath.c_str());
+      }
       return 1;
     }
   } else {
-    std::cout << "Starting pulse... Monitoring "
-              << interface << ".\nPress Ctrl+C to stop.\n\n";
+    if (!config.isReadOnly) {
+      std::cout << "Starting pulse... Monitoring "
+                << interface << ".\nPress Ctrl+C to stop.\n\n";
+    } else {
+      std::cout << "Monitoring " << interface << " (Viewer mode).\n"
+                << "Press Ctrl+C to stop.\n\n";
+    }
   }
 
   unsigned long long totalRxSession = 0;
@@ -124,22 +162,22 @@ int main(int argc, char *argv[]) {
     unsigned long long speedTxBytes =
         static_cast<unsigned long long>(txDiff / elapsed.count());
 
-    std::string speedRX = formatBytes(speedRxBytes, true, config.useBits);
-    std::string speedTX = formatBytes(speedTxBytes, true, config.useBits);
-
-    std::string totRx = formatBytes(totalRxSession, false, config.useBits);
-    std::string totTx = formatBytes(totalTxSession, false, config.useBits);
-
     std::string currentHour = getCurrentHourKey();
     storage.addUsage(currentHour, rxDiff, txDiff);
 
     saveTimer++;
-    if (saveTimer >= 60) {
+    if (saveTimer >= 60 && !config.isReadOnly) {
       storage.save();
       saveTimer = 0;
     }
 
     if (!config.runDaemon) {
+      std::string speedRX = formatBytes(speedRxBytes, true, config.useBits);
+      std::string speedTX = formatBytes(speedTxBytes, true, config.useBits);
+
+      std::string totRx = formatBytes(totalRxSession, false, config.useBits);
+      std::string totTx = formatBytes(totalTxSession, false, config.useBits);
+
       std::cout << "\rRx: " << speedRX << " (" << totRx
                 << ") |  Tx: " << speedTX << " (" << totTx << ")          "
                 << std::flush;
@@ -151,7 +189,10 @@ int main(int argc, char *argv[]) {
   }
 
   std::cout << "\n\nSaving session data to disk... Goodbye!\n";
-  storage.save();
+
+  if (!config.isReadOnly) {
+    storage.save();
+  }
 
   return 0;
 }

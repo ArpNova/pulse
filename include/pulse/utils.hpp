@@ -12,6 +12,7 @@ struct PulseConfig {
   bool showHelp = false;
   bool showStats = false;
   bool useBits = false;
+  bool runDaemon = false;
 };
 
 PulseConfig parseArguments(int argc, char *argv[]);

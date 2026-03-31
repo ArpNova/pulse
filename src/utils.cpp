@@ -58,6 +58,8 @@ PulseConfig parseArguments(int argc, char **argv) {
       config.showStats = true;
     } else if (arg == "-b" || arg == "--bits") {
       config.useBits = true;
+    } else if (arg == "-d" || arg == "--daemon") {
+      config.runDaemon = true;
     } else if (arg == "-h" || arg == "--help") {
       config.showHelp = true;
     } else if (arg == "-i" || arg == "--interface") {

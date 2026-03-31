@@ -6,6 +6,7 @@
 #include <csignal>
 #include <iostream>
 #include <thread>
+#include <unistd.h>
 
 std::atomic<bool> keepRunning(true);
 
@@ -20,11 +21,13 @@ int main(int argc, char *argv[]) {
     std::cout << "  -i, --interface <name>   Specify network interface\n";
     std::cout << "  -s, --stats              Show data usage history\n";
     std::cout << "  -b, --bits               Display output in bits (b/s)\n";
+    std::cout << "  -d, --daemon             Run silently in the background\n";
     std::cout << "  -h, --help               Show this menu\n";
     return 0;
   }
 
   signal(SIGINT, handleExit);
+  signal(SIGTERM, handleExit);
 
   StorageManager storage;
   storage.load();
@@ -66,8 +69,19 @@ int main(int argc, char *argv[]) {
   unsigned long long previousRxBytes = *previousRxOpt;
   unsigned long long previousTxBytes = *previousTxOpt;
 
-  std::cout << "Starting pulse... Monitoring "
-            << interface << ".\nPress Ctrl+C to stop.\n\n";
+  if (config.runDaemon) {
+    std::cout << "Starting pulse in background daemon mode...\n";
+    std::cout << "Monitoring interface: " << interface << "\n";
+    std::cout << "To stop the background process later, run: killall pulse\n";
+
+    if (daemon(0, 0) < 0) {
+      std::cerr << "Error: Failed to start daemon mode.\n";
+      return 1;
+    }
+  } else {
+    std::cout << "Starting pulse... Monitoring "
+              << interface << ".\nPress Ctrl+C to stop.\n\n";
+  }
 
   unsigned long long totalRxSession = 0;
   unsigned long long totalTxSession = 0;
@@ -125,8 +139,11 @@ int main(int argc, char *argv[]) {
       saveTimer = 0;
     }
 
-    std::cout << "\rRx: " << speedRX << " (" << totRx << ") |  Tx: " << speedTX
-              << " (" << totTx << ")          " << std::flush;
+    if (!config.runDaemon) {
+      std::cout << "\rRx: " << speedRX << " (" << totRx
+                << ") |  Tx: " << speedTX << " (" << totTx << ")          "
+                << std::flush;
+    }
 
     previousRxBytes = currentRxBytes;
     previousTxBytes = currentTxBytes;

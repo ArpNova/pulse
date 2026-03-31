@@ -5,18 +5,16 @@
 #include <chrono>
 #include <csignal>
 #include <cstdio>
-#include <fstream>
+#include <fcntl.h>
 #include <iostream>
 #include <string>
+#include <sys/file.h>
 #include <thread>
 #include <unistd.h>
 
 std::atomic<bool> keepRunning(true);
-std::atomic<bool> createdLockFile(false);
 
-void handleExit([[maybe_unused]] int signum) {
-  keepRunning = false;
-}
+void handleExit([[maybe_unused]] int signum) { keepRunning = false; }
 
 int main(int argc, char *argv[]) {
   const std::string lockFilePath = "/tmp/pulse.lock";
@@ -76,25 +74,26 @@ int main(int argc, char *argv[]) {
   unsigned long long previousRxBytes = *previousRxOpt;
   unsigned long long previousTxBytes = *previousTxOpt;
 
-  std::ifstream checkLock(lockFilePath);
-  bool lockExists = checkLock.good();
-  checkLock.close();
+  int lockFd = open(lockFilePath.c_str(), O_CREAT | O_RDWR, 0666);
+  if (lockFd < 0) {
+    std::cerr << "Error: Could not open lockfile " << lockFilePath << "\n";
+    return 1;
+  }
 
-  if (lockExists) {
+  if (flock(lockFd, LOCK_EX | LOCK_NB) == -1) {
+    close(lockFd);
     if (config.runDaemon) {
       std::cerr << "Error: pulse is already running in the background.\n";
       return 1;
     } else {
-      std::cout << "[Note] pulse instance detected in background\n";
+      std::cout << "[Note] pulse daemon detected in background\n";
       std::cout << "Starting in read-only viewer mode\n\n";
       config.isReadOnly = true;
     }
-  } else {
-    std::ofstream lockFile(lockFilePath);
-    lockFile << "Pulse monitoring\n";
-    lockFile.close();
-    createdLockFile = true;
   }
+
+  // if flock succeeds, we hold the lock! The file descriptor remains open
+  // and the kernel will automatically release it when the process exits.
 
   if (config.runDaemon) {
     std::cout << "Starting pulse in background daemon mode...\n";
@@ -103,9 +102,6 @@ int main(int argc, char *argv[]) {
 
     if (daemon(0, 0) < 0) {
       std::cerr << "Error: Failed to start daemon mode.\n";
-      if (createdLockFile) {
-        std::remove(lockFilePath.c_str());
-      }
       return 1;
     }
   } else {
@@ -144,7 +140,8 @@ int main(int argc, char *argv[]) {
     unsigned long long currentTxBytes = *currentTxOpt;
 
     // handle potential counter wrap-around or reset
-    auto calcDiff = [](unsigned long long current, unsigned long long previous) -> unsigned long long {
+    auto calcDiff = [](unsigned long long current,
+                       unsigned long long previous) -> unsigned long long {
       if (current >= previous) {
         return current - previous;
       }
@@ -197,10 +194,6 @@ int main(int argc, char *argv[]) {
 
   if (!config.isReadOnly) {
     storage.save();
-  }
-
-  if (createdLockFile) {
-    std::remove("/tmp/pulse.lock");
   }
 
   return 0;

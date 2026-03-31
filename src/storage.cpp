@@ -10,6 +10,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <unistd.h>
 
 StorageManager::StorageManager() {
   const char *homeDir = std::getenv("HOME");
@@ -48,19 +49,21 @@ void StorageManager::load() {
 
 void StorageManager::save() {
   std::string tmpPath = dbPath + ".tmp";
-  std::ofstream file(tmpPath);
+  FILE *file = std::fopen(tmpPath.c_str(), "w");
 
-  if (!file.is_open()) {
+  if (!file) {
     std::cerr << "\nError: Could not save data to " << tmpPath << "\n";
     return;
   }
 
   for (const auto &pair : usageData) {
-    file << pair.first << "," << pair.second.rx << "," << pair.second.tx
-         << "\n";
+    std::fprintf(file, "%s,%llu,%llu\n", pair.first.c_str(), pair.second.rx,
+                 pair.second.tx);
   }
 
-  file.close();
+  std::fflush(file);
+  fsync(fileno(file));
+  std::fclose(file);
 
   std::rename(tmpPath.c_str(), dbPath.c_str());
 }

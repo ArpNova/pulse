@@ -7,11 +7,12 @@
 <h4 align="center">A minimalist, native real-time network interface monitor for Linux.</h4>
 
 <p align="center">
-  <a href="https://github.com/arpnova/pulse/stargazers"><img src="https://img.shields.io/github/stars/arpnova/pulse?style=flat&color=white&labelColor=white&logo=github&logoColor=black" alt="Stars" /></a>
-  <a href="https://github.com/arpnova/pulse/network/members"><img src="https://img.shields.io/github/forks/arpnova/pulse?style=flat&color=white&labelColor=white&logo=github&logoColor=black" alt="Forks" /></a>
-  <a href="https://isocpp.org/"><img src="https://img.shields.io/badge/C++-17-00599C?style=flat&logo=c%2B%2B&logoColor=white" alt="C++17" /></a>
-  <a href="https://www.linux.org/"><img src="https://img.shields.io/badge/Linux-FCC624?style=flat&logo=linux&logoColor=black" alt="Linux" /></a>
-  <a href="https://github.com/arpnova/pulse/blob/main/LICENSE"><img src="https://img.shields.io/github/license/arpnova/pulse?style=flat&color=a6e22e" alt="License" /></a>
+  <a href="https://github.com/arpnova/pulse/stargazers"><img src="https://img.shields.io/github/stars/arpnova/pulse?style=flat-square&color=white&labelColor=white&logo=github&logoColor=black" alt="Stars" /></a>
+  <a href="https://github.com/arpnova/pulse/network/members"><img src="https://img.shields.io/github/forks/arpnova/pulse?style=flat-square&color=white&labelColor=white&logo=github&logoColor=black" alt="Forks" /></a>
+  <a href="https://isocpp.org/"><img src="https://img.shields.io/badge/C++-17-00599C?style=flat-square&logo=c%2B%2B&logoColor=white" alt="C++17" /></a>
+  <a href="https://www.linux.org/"><img src="https://img.shields.io/badge/Linux-FCC624?style=flat-square&logo=linux&logoColor=black" alt="Linux" /></a>
+  <a href="https://github.com/arpnova/pulse/blob/main/LICENSE"><img src="https://img.shields.io/github/license/arpnova/pulse?style=flat-square&color=a6e22e" alt="License" /></a>
+  <a href="https://github.com/arpnova/pulse/releases/latest"><img src="https://img.shields.io/github/v/release/arpnova/pulse?style=flat-square" alt="Release" /></a>
 </p>
 
 <p align="center">
@@ -19,6 +20,7 @@
   <a href="#features">Features</a> •
   <a href="#installation">Installation</a> •
   <a href="#usage">Usage</a> •
+  <a href="#architecture">Architecture</a> •
   <a href="#license">License</a>
 </p>
 
@@ -26,23 +28,21 @@
 
 ## 📌 Overview
 
-**pulse** is a lightweight, efficient command-line tool written in C++ that continuously tracks and displays the Receive (Rx) and Transmit (Tx) speeds of a specified network interface. 
+**pulse** is a lightweight, strictly native, command-line tool built in C++ that effortlessly tracks and displays real-time Receive (Rx) and Transmit (Tx) bandwidth for Linux network interfaces.
 
-Built exclusively for Linux, it completely bypasses external dependencies by mapping directly into the kernel's strictly formatted SysFS (`/sys/class/net/`) packet statistics. This provides instantaneous and highly-accurate throughput measurements with a virtually non-existent CPU and memory footprint. 
+Bypassing bloatware and external dependencies entirely, pulse maps directly into the Linux kernel's SysFS (`/sys/class/net/`) architecture to derive zero-overhead packet statistics. Designed for stability and endurance, `pulse` acts as a highly accurate data monitor that you can confidently leave running in the background.
 
 ---
 
-## ✨ Features
+## ✨ Key Features
 
-* **Zero External Dependencies**: Operates natively reading direct kernel stats. No `libpcap` or third-party wrappers required.
-* **Universal Static Binary**: Fully statically linked executable guarantees compatibility across all Linux distributions (old and new) right out of the box.
-* **Bits vs. Bytes Toggle**: Utilize the `-b` flag to seamlessly switch between viewing network speeds and historical data in standard network bits (b/s) instead of Bytes (B/s).
-* **Auto-Discovery**: Automatically scans and monitors the first active network hardware interface if no target is provided.
-* **Smart Data Persistence**: Hourly downloaded and uploaded data is safely committed to a background atomic database (`~/.pulse_data.csv`).
-* **Crash-Resilient Design**: Fault-tolerant implementations elegantly handle interface resets, integer wrap-arounds, and malformed files.
-* **Real-Time Bandwidth**: Instant tracking of incoming (Rx) and outgoing (Tx) data speeds, dynamically scaling units (B/s to GB/s) for ultimate readability.
-* **Long-Term Statistics**: Track your data bandwidth usage across your day, your month, and all-time utilizing the built-in analytical flags.
-* **Graceful Termination**: Intercepts `SIGINT` (`Ctrl+C`) to cleanly finalize current monitoring sessions and commit final analytics before exiting.
+- **Zero External Dependencies**: Operates natively reading direct kernel stats. No `libpcap`, external wrappers, or heavy runtimes are required.
+- **Universal Static Binary**: Shipped as a fully statically linked executable guaranteeing bulletproof compatibility out-of-the-box across all Linux distributions.
+- **Smart Auto-Discovery**: Automatically scans and binds to physical network hardware, intelligently filtering out virtual routing bridges like Docker, VMs, or VPNs when no specific target is provided.
+- **Daemon Viewer Concurrency**: Run `pulse -d` to track statistics silently in the background. Launching standard `pulse` natively detects the background POSIX `flock()` lockfile and smoothly drops into a realtime Read-Only GUI viewer to track metrics without database clashing.
+- **Crash-Resilient Durability**: Hourly data bandwidth is physically flushed to disk (`fsync()`) resolving to an atomic backup database (`~/.pulse_data.csv`).
+- **Signal-Safe Mathematics**: Implements advanced threshold bounding to recover phantom bytes lost during kernel integer bounds wrapping, backed by async-signal-safe POSIX routines guaranteeing flawless operation through `kill -9` or connection resets.
+- **Dynamic Scale Formatting**: Tracks usage dynamically from basic `B/s` all the way to `GB/s` as well as interchangeable metric flags (`-b`) for bits visualization (`b/s` to `Gb/s`).
 
 ---
 
@@ -50,90 +50,73 @@ Built exclusively for Linux, it completely bypasses external dependencies by map
 
 ### Option 1: One-Line Install (Recommended)
 
-Install the pre-compiled binary directly to your system with a single command:
+The easiest way to get started is by pulling the latest pre-compiled production binary straight to your environment.
 
 ```bash
-sudo wget -O /usr/local/bin/pulse https://github.com/arpnova/pulse/releases/download/v0.1.1/pulse && sudo chmod +x /usr/local/bin/pulse
+sudo wget -O /usr/local/bin/pulse https://github.com/arpnova/pulse/releases/download/v0.2.0/pulse && sudo chmod +x /usr/local/bin/pulse
 ```
 
-Once installed, you can run `pulse` from anywhere in your terminal — no build step required.
+> **Note**: You can run `pulse` from anywhere in your terminal once installed. The command above targets the latest **v0.2.0** stable release.
 
 ### Option 2: Build from Source
 
-**Prerequisites**
+**Prerequisites**:
 - Any modern Linux-based operating system.
 - `g++` (Compiler supporting C++17).
 - `make` (GNU Make).
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/arpnova/pulse.git
-   cd pulse
-   ```
+```bash
+# 1. Clone the repository
+git clone https://github.com/arpnova/pulse.git
+cd pulse
 
-2. Compile using `make`:
-   ```bash
-   make
-   ```
-   *This creates a `pulse` executable inside the `build/` directory.*
+# 2. Compile using GNU Make
+make
+```
+*This statically links and places the `pulse` executable inside the newly generated `build/` directory.*
 
 ---
 
-Run the compiled executable. If no specific arguments are provided, pulse will automatically locate and bind to your active network interface.
+## 💻 Usage
 
-> **Note:** If you installed via the one-line installer (Option 1), use `pulse` directly. If you built from source (Option 2), use `./build/pulse`.
+Regardless of how you installed pulse, usage remains identical. If no arguments are passed, `pulse` falls back to auto-discovering the best active connection.
 
-### Options
+### Core Flags
 
 | Flag | Long Flag | Description |
 | :--- | :--- | :--- |
-| `-i` | `--interface <name>` | Manually specify a network interface to monitor |
-| `-s` | `--stats` | Display aggregated data usage history |
-| `-b` | `--bits` | Display network speeds and statistics in bits (b/s) instead of Bytes (B/s) |
-| `-h` | `--help` | Display the application help menu |
+| `-i` | `--interface <name>` | Manually specify a target network interface to analyze. |
+| `-s` | `--stats` | Print the historically logged data bandwidth aggregations. |
+| `-b` | `--bits` | Display speeds and statistics using bits (`b/s`) instead of Bytes (`B/s`). |
+| `-d` | `--daemon` | Start pulse in detached daemon mode, securely tracking bandwidth in the background. |
+| `-h` | `--help` | Render the usage matrix and tool help menu. |
 
-### Command Examples
+### Quick Start Examples
 
 ```bash
-# ── If installed via one-line installer (Option 1) ──
-
-# Auto-detect and monitor the active interface
+# Auto-detect and monitor the active interface natively
 pulse
 
-# Specify a custom interface
+# Specify a custom interface manually
 pulse -i wlan0
 
-# Show long-term data usage
-pulse --stats
-
-# Show speeds in bits (b/s) instead of Bytes
+# Monitor your interface using standard bits (b/s) instead of Bytes
 pulse -b
 
-# Show long-term data usage in bits
-pulse --stats -b
+# Start the pulse daemon in the background to log stats silently
+pulse -d
 
-# Show help
-pulse --help
-
-
-# ── If built from source (Option 2) ──
-
-./build/pulse
-./build/pulse -i wlan0
-./build/pulse --stats
-./build/pulse -b
-./build/pulse --stats -b
-./build/pulse --help
+# Show long-term collected aggregated data usage
+pulse --stats
 ```
 
 ---
 
 ## 📊 Output Examples
 
-### Live Monitoring Example
-Tracking incoming data speeds in real-time.
+### Live Real-Time Monitoring
+Tracking bandwidth in standard notation.
 
-**Default (Bytes):**
 ```text
 Scanning for active connections... 
 Auto-discovered: wlan0
@@ -143,20 +126,22 @@ Press Ctrl+C to stop.
 Rx: 1.25 MB/s (12.50 MB) |  Tx: 450.32 KB/s (4.50 MB)          
 ```
 
-**Bits mode (`pulse -b`):**
+### Daemon Viewer Mode
+Running `pulse` while `pulse -d` is already active in the background contextually opens Read-Only Viewer Mode safely locking the database file against corruption.
+
 ```text
-Scanning for active connections... 
-Auto-discovered: wlan0
-Starting pulse... Monitoring wlan0.
+[Note] pulse daemon detected in background
+Starting in read-only viewer mode
+
+Monitoring wlan0 (Viewer mode).
 Press Ctrl+C to stop.
 
-Rx: 10.49 Mb/s (104.86 Mb) |  Tx: 3.69 Mb/s (37.75 Mb)          
+Rx: 5.60 MB/s (55.40 MB) |  Tx: 1.10 MB/s (12.00 MB)          
 ```
 
-### Statistics Example (`pulse -s`)
-Printing total historical bandwidth usage.
+### Historical Statistics
+Evaluating bandwidth totals using `pulse -s`.
 
-**Default (Bytes):**
 ```text
  pulse Network Statistics 
 
@@ -170,41 +155,27 @@ All-Time:
   DL: 150.75 GB  |  UL: 42.80 GB
 ```
 
-**Bits mode (`pulse --stats -b`):**
-```text
- pulse Network Statistics 
-
-Today (2026-03-28):
- DL: 104.86 Mb | UL: 37.75 Mb
-
-This month (2026-03):
-  DL: 388.26 Gb  |  UL: 103.94 Gb
-
-All-Time:
-  DL: 1294.94 Gb  |  UL: 367.65 Gb
-```
-
 ---
 
 ## 🏗️ Architecture
 
-The codebase is strictly modularized for maintainability:
+pulse maintains a deeply decoupled, modular C++ design ensuring maximal maintainability and zero architectural debt.
 
-- `include/pulse/`
-  - `network.hpp` - Hardware interface discovery and sysfs I/O bridging.
-  - `storage.hpp` - Robust CSV persistence and statistical aggregation.
-  - `utils.hpp` - Intelligent data formatting algorithms.
-- `src/` 
-  - `main.cpp` - Target execution lifecycle and runtime loop.
-  - `network.cpp` - Implementation of the sysfs polling routines.
-  - `storage.cpp` - Fault-tolerant atomic persistence implementation.
-  - `utils.cpp` - Implementation of argument mapping and string parsers.
+- **`include/pulse/`**
+  - **`network.hpp`**: Hardware interface binding mapping internal kernel `/sys/` states to application memory.
+  - **`storage.hpp`**: Secure atomic CSV disk flushing logic and statistical parsing.
+  - **`utils.hpp`**: Memory-safe string serialization, arithmetic bounds recovery, and dynamic text formatters.
+- **`src/`** 
+  - **`main.cpp`**: Primary infinite runtime loops, POSIX hooks (`SIGINT`/`SIGTERM`), and top-level daemon logic.
+  - **`network.cpp`**: Low-overhead abstractions mapping `/sys/class/net/`.
+  - **`storage.cpp`**: Safely synchronized database writing enforced heavily by `flock()`.
+  - **`utils.cpp`**: Implementation logic spanning dynamic scale representations.
 
 ---
 
 ## 🧹 Maintenance
 
-To cleanly purge the compiled binaries and reset the build environment, run:
+Use the provided build tools to clear intermediate builds securely:
 
 ```bash
 make clean
@@ -214,6 +185,6 @@ make clean
 
 ## 📜 License
 
-This project is officially licensed under the [MIT License](LICENSE). 
+This project is open-source software licensed under the **[MIT License](LICENSE)**.
 
-Copyright © 2026 Arpan Biswas.
+Copyright © 2026 Arpan Biswas
